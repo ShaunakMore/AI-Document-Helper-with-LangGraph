@@ -155,23 +155,6 @@ FLASK_DEBUG=True
    - Use the pre-defined quick action buttons for common tasks
    - Click any button to send that prompt to the AI
 
-## 🏗 Project Structure
-
-```
-drafter/
-├── app.py                 # Flask backend application
-├── .env                   # Environment variables
-├── .gitignore            # Git ignore file
-├── README.md             # This file
-├── requirements.txt      # Python dependencies
-├── saved_documents/      # Directory for saved documents
-└── frontend/             # React frontend (if separate)
-    ├── src/
-    │   ├── App.js        # Main React component
-    │   └── ...
-    ├── package.json
-    └── ...
-```
 
 ## 🔍 Key Features Explained
 
