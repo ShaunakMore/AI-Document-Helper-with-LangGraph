@@ -87,52 +87,6 @@ Drafter is an intelligent document editing application that combines a Flask bac
    ```
    The frontend will start on `http://localhost:3000`
 
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file with the following variables:
-
-```env
-# Required: Google AI API Key
-GOOGLE_API_KEY=your_google_ai_api_key_here
-
-# Optional: Flask configuration
-FLASK_ENV=development
-FLASK_DEBUG=True
-```
-
-### Getting Google AI API Key
-
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new API key
-3. Add it to your `.env` file
-
-## 📡 API Endpoints
-
-### Chat Endpoint
-- **POST** `/api/chat`
-  - Send messages to the AI assistant
-  - Body: `{"message": "string", "session_id": "string"}`
-
-### Document Management
-- **GET** `/api/document/<session_id>`
-  - Retrieve current document content for a session
-
-### Session Management
-- **POST** `/api/sessions`
-  - Create a new session
-- **POST** `/api/sessions/<session_id>/clear`
-  - Clear a session's document content
-
-### Health Check
-- **GET** `/api/health`
-  - Check server status and active sessions
-
-### Testing
-- **POST** `/api/test/update/<session_id>`
-  - Manually update document content for testing
-
 ## 🎯 Usage
 
 1. **Start the Application**
@@ -155,6 +109,77 @@ FLASK_DEBUG=True
    - Use the pre-defined quick action buttons for common tasks
    - Click any button to send that prompt to the AI
 
+## 🏗 Architecture & Flow
+
+### LangGraph Structure
+
+The application uses a sophisticated graph-based workflow powered by LangGraph. Here's how it works:
+
+```mermaid
+graph TD
+    A[User Input Message] --> B[Entry Point: Agent Node]
+    
+    B --> C{Agent Decision}
+    C -->|Process Message| D[Call Gemini 2.0 Flash Lite Model]
+    
+    D --> E{Tool Calls Required?}
+    
+    E -->|Yes - Tool Calls Present| F[Tools Node]
+    E -->|No - Direct Response| G[END - Return Response]
+    
+    F --> H{Which Tool?}
+    
+    H -->|update_document| I[Update Document Tool]
+    H -->|save_document| J[Save Document Tool]
+    
+    I --> K[Update Session Document Content]
+    J --> L[Save to File System]
+    
+    K --> M[Tool Response Message]
+    L --> M
+    
+    M --> N[Return to Agent Node]
+    N --> B
+    
+    B --> O{Final Check}
+    O -->|More Tool Calls Needed| F
+    O -->|Complete| G
+    
+    G --> P[Return Final Response to Frontend]
+    
+    subgraph "State Management"
+        Q[AgentState]
+        Q --> R[messages: List of BaseMessage]
+        Q --> S[document_content: str]
+    end
+    
+    subgraph "Session Storage"
+        T[sessions Dict]
+        T --> U[session_id]
+        U --> V[document_content]
+        U --> W[messages history]
+    end
+    
+    subgraph "Available Tools"
+        X[update_document]
+        X --> X1[Takes: content string]
+        X --> X2[Updates: session document]
+        X --> X3[Returns: success message]
+        
+        Y[save_document]
+        Y --> Y1[Takes: filename string]
+        Y --> Y2[Saves: to saved_documents/]
+        Y --> Y3[Returns: save confirmation]
+    end
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style F fill:#fff3e0
+    style G fill:#e8f5e8
+    style I fill:#ffebee
+    style J fill:#ffebee
+    style P fill:#e8f5e8
+```
 
 ## 🔍 Key Features Explained
 
@@ -172,38 +197,5 @@ The AI assistant has access to two main tools:
 - Frontend polls for document updates every 2 seconds
 - Immediate updates when AI tools are used
 - Live character count and document preview
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Backend not starting**
-   - Check if all dependencies are installed
-   - Verify Google API key is set in `.env`
-   - Ensure port 5000 is available
-
-2. **Frontend can't connect to backend**
-   - Verify backend is running on port 5000
-   - Check CORS configuration
-   - Ensure API URLs match the backend address
-
-3. **AI responses not working**
-   - Verify Google API key is valid and has credits
-   - Check console logs for error messages
-   - Ensure internet connection is stable
-
-4. **Documents not saving**
-   - Check if `saved_documents/` directory exists
-   - Verify write permissions
-   - Check backend logs for errors
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-1. Check the troubleshooting section above
-2. Review the console logs for error messages
-3. Open an issue on GitHub with detailed information about the problem
-
----
 
 **Happy Writing with Drafter! 🚀✍️**
